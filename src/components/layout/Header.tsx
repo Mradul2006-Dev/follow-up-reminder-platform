@@ -16,7 +16,8 @@ export function Header({ onMenu }: { onMenu: () => void }) {
   const { openAddPatient, openSchedule } = useModals();
 
   const title = NAV_ITEMS.find((n) => isActive(pathname, n.href))?.title ?? "Clinical Follow-ups";
-  const searchable = pathname !== "/settings";
+  // The search box filters lists, so hide it on pages that have none.
+  const searchable = pathname !== "/settings" && !pathname.startsWith("/patients/");
 
   return (
     <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 px-4 md:px-8 py-3 lg:py-0 lg:h-16 flex flex-wrap lg:flex-nowrap items-center justify-between gap-x-6 gap-y-3">

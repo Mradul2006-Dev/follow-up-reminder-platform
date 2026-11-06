@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { formatDateTime } from "@/lib/date";
 import type { FollowUp, Patient } from "@/lib/types";
 import { useStore } from "@/lib/store/store";
@@ -30,13 +31,13 @@ function ConsentPill({ optIn }: { optIn: boolean }) {
 
 function PatientCell({ patient }: { patient: Patient }) {
   return (
-    <div className="flex items-center gap-3">
+    <Link href={`/patients/${patient.id}`} aria-label={`Open ${patient.name}'s record`} className="group flex items-center gap-3">
       <Avatar name={patient.name} tone="bg-slate-100 text-slate-700 border-slate-200" />
       <div className="flex flex-col min-w-0">
-        <span className="font-semibold text-slate-900 truncate">{patient.name}</span>
+        <span className="font-semibold text-slate-900 truncate group-hover:text-teal-700 transition-colors">{patient.name}</span>
         <span className="text-[11px] text-slate-400 font-mono tabular-nums">{patient.mrn}</span>
       </div>
-    </div>
+    </Link>
   );
 }
 

@@ -102,3 +102,53 @@ export interface DashboardStats {
   upcomingCount: number;
   missedCount: number;
 }
+
+// ---------------------------------------------------------------------------
+// Clinical record (patient detail page)
+// ---------------------------------------------------------------------------
+
+export interface Condition {
+  id: string;
+  name: string;
+  status: "active" | "monitoring" | "resolved";
+  /** YYYY-MM-DD, when the condition was diagnosed. */
+  since: string;
+}
+
+export interface Allergy {
+  id: string;
+  substance: string;
+  reaction: string;
+  severity: "mild" | "moderate" | "severe";
+}
+
+export interface DoctorNote {
+  id: string;
+  /** YYYY-MM-DD */
+  date: string;
+  author: string;
+  content: string;
+}
+
+export interface Prescription {
+  id: string;
+  medication: string;
+  dosage: string;
+  frequency: string;
+  /** YYYY-MM-DD */
+  startDate: string;
+  endDate?: string;
+  prescribedBy: string;
+  status: "active" | "completed" | "discontinued";
+  instructions?: string;
+}
+
+/** Loaded separately from Patient so the list views stay light. */
+export interface PatientRecord {
+  patientId: string;
+  bloodType?: string;
+  conditions: Condition[];
+  allergies: Allergy[];
+  notes: DoctorNote[];
+  prescriptions: Prescription[];
+}

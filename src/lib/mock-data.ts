@@ -7,17 +7,9 @@
  */
 import { addDays, MOCK_TODAY } from "./date";
 import { PROTOCOLS, PROVIDERS } from "./constants";
+import { mulberry32 } from "./prng";
 import type { ClinicSettings, FollowUp, Gender, Patient } from "./types";
 
-function mulberry32(seed: number) {
-  let a = seed;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 const rand = mulberry32(20251024);
 const int = (min: number, max: number) => Math.floor(rand() * (max - min + 1)) + min;
 const pick = <T,>(arr: readonly T[]): T => arr[Math.floor(rand() * arr.length)];
@@ -39,6 +31,18 @@ const LAST_NAMES = [
   "Osei", "Pereira", "Rahman", "Silva", "Tanaka", "Usman", "Voss", "Whitaker", "Yilmaz", "Zhang",
 ];
 
+const HAND_DOB: Record<string, string> = {
+  "p-001": "1984-03-12",
+  "p-002": "1971-08-02",
+  "p-003": "1958-11-23",
+  "p-004": "2018-05-09",
+  "p-005": "1979-01-30",
+  "p-006": "1992-06-17",
+  "p-007": "1995-09-04",
+  "p-008": "1952-12-15",
+  "p-009": "1988-07-21",
+};
+
 const HAND_PATIENTS: Patient[] = [
   ["p-001", "MRN-849201", "Clara Vance", "+15550100001", "female", "2024-02-11"],
   ["p-002", "MRN-910482", "Marcus Brody", "+15550100002", "male", "2023-09-05"],
@@ -54,6 +58,8 @@ const HAND_PATIENTS: Patient[] = [
   mrn,
   name,
   phone,
+  email: `${name.toLowerCase().replace(" ", ".")}@example.com`,
+  dob: HAND_DOB[id],
   gender: gender as Gender,
   whatsappOptIn: true,
   consentAt: createdAt,
@@ -155,6 +161,34 @@ const handFollowUps: FollowUp[] = [
   hand(9, "p-009", addDays(T, 3), "11:30", "Dermatology Biopsy Results", "Dr. Amara Okafor", "scheduled", {}, "Clinic"),
 ];
 
+// Earlier visits for the nine design patients, so their detail timelines have history.
+// All in the past and "visited", so no dashboard number changes.
+const HISTORY: [patientId: string, daysAgo: number, protocol: string, provider: string, notes: string][] = [
+  ["p-001", 7, "Post-Op Wound Check", "Dr. Sarah Jenkins", "Incision healing well. Sutures removed."],
+  ["p-001", 21, "Post-Op Wound Check", "Dr. Robert Chen", "First post-op check. Mild swelling, no infection."],
+  ["p-002", 30, "Diabetes HbA1c Review", "Dr. Sarah Jenkins", "HbA1c 7.4%. Continue current plan."],
+  ["p-002", 120, "Diabetes HbA1c Review", "Dr. Sarah Jenkins", "Dose adjusted. Dietitian referral made."],
+  ["p-003", 95, "Cardiology Follow-up", "Dr. Robert Chen", "ECG unchanged. Statin dose maintained."],
+  ["p-003", 185, "Cardiology Follow-up", "Dr. Robert Chen", "Stable. Review in 3 months."],
+  ["p-004", 60, "Pediatric Vaccine Check", "Dr. Sarah Jenkins", "Vaccinations up to date."],
+  ["p-004", 150, "Pediatric Vaccine Check", "Dr. Sarah Jenkins", "Growth on track. Booster given."],
+  ["p-005", 45, "Hypertension Consultation", "Dr. Sarah Jenkins", "Dose increased. Recheck in 6 weeks."],
+  ["p-005", 110, "Hypertension Consultation", "Dr. Sarah Jenkins", "Hypertension confirmed. Lifestyle plan discussed."],
+  ["p-006", 14, "Post-Fracture X-Ray Review", "Dr. Robert Chen", "Good callus formation. Cast removed."],
+  ["p-006", 42, "Post-Fracture X-Ray Review", "Dr. Robert Chen", "Fracture reduced and casted."],
+  ["p-007", 28, "Prenatal Ultrasound 2nd Trim", "Dr. Priya Nair", "Anatomy scan normal."],
+  ["p-007", 56, "Prenatal Ultrasound 2nd Trim", "Dr. Priya Nair", "Routine antenatal visit. All normal."],
+  ["p-008", 16, "Chemotherapy Tolerance Check", "Dr. Marcus Hale", "Cycle 4 tolerated. Mild nausea only."],
+  ["p-008", 37, "Chemotherapy Tolerance Check", "Dr. Marcus Hale", "Cycle 3 completed. Weight stable."],
+  ["p-009", 10, "Dermatology Biopsy Results", "Dr. Amara Okafor", "Punch biopsy taken. Results pending."],
+  ["p-009", 60, "Dermatology Biopsy Results", "Dr. Amara Okafor", "Dermoscopy done. Biopsy recommended."],
+];
+const HISTORY_TIMES = ["09:00", "10:30", "11:15", "14:00", "15:30"];
+const handHistory: FollowUp[] = HISTORY.map(([patientId, daysAgo, protocol, provider, notes], i) => {
+  const time = HISTORY_TIMES[i % HISTORY_TIMES.length];
+  return hand(10 + i, patientId, addDays(T, -daysAgo), time, protocol, provider, "visited", { loggedAt: time, notes });
+});
+
 const VISIT_NOTES = [
   "Recovery on track. No complications reported.",
   "Labs reviewed with patient. Dosage adjusted.",
@@ -222,7 +256,7 @@ function generateFollowUps(): FollowUp[] {
   return out;
 }
 
-export const seedFollowUps: FollowUp[] = [...handFollowUps, ...generateFollowUps()];
+export const seedFollowUps: FollowUp[] = [...handFollowUps, ...handHistory, ...generateFollowUps()];
 
 export const seedSettings: ClinicSettings = {
   clinicName: "Metro Health Clinic",

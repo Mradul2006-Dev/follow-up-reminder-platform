@@ -67,3 +67,16 @@ function toMinutes(date: string, time: string): number {
 export function hoursFromNow(date: string, time: string, offsetHours = 0): number {
   return (toMinutes(date, time) - offsetHours * 60 - toMinutes(MOCK_TODAY, MOCK_NOW_HHMM)) / 60;
 }
+
+/** "2025-10-26" -> "Oct 26, 2025" */
+export function formatDateLong(date: string): string {
+  const dt = parseDate(date);
+  return `${MONTHS[dt.getUTCMonth()]} ${dt.getUTCDate()}, ${dt.getUTCFullYear()}`;
+}
+
+/** Age in whole years on the mock "today". */
+export function calcAge(dob: string): number {
+  const [by, bm, bd] = dob.split("-").map(Number);
+  const [ty, tm, td] = MOCK_TODAY.split("-").map(Number);
+  return ty - by - (tm < bm || (tm === bm && td < bd) ? 1 : 0);
+}

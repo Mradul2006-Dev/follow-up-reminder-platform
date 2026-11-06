@@ -10,7 +10,7 @@
  *
  * Secrets belong in server-side env vars only (see .env.example). Never in client code.
  */
-import type { ClinicSettings, FollowUp, NewPatientInput, Patient } from "../types";
+import type { ClinicSettings, FollowUp, NewPatientInput, Patient, PatientRecord } from "../types";
 
 export interface CreatePatientPayload extends Omit<NewPatientInput, "countryCode" | "phone" | "mrn"> {
   mrn: string;
@@ -39,7 +39,13 @@ export interface SettingsService {
   save(settings: ClinicSettings): Promise<ClinicSettings>;
 }
 
+export interface PatientRecordService {
+  /** Conditions, allergies, doctor's notes and prescriptions. Resolves null when none exist. */
+  getByPatientId(patientId: string): Promise<PatientRecord | null>;
+}
+
 export interface Services {
+  records: PatientRecordService;
   patients: PatientService;
   followUps: FollowUpService;
   whatsapp: WhatsAppService;
